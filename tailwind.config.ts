@@ -8,9 +8,16 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      animation: {
+        "spin-slow": "spin 2s linear infinite",
+      },
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        "background-accent": "#E54065",
+        "background-default": "#F4F5F9",
+        "background-read": "#F2F2F2",
+        "border-muted": "#CFD2DC",
+        "text-default": "#636363",
+        "background-filter": "#E1E4EA",
       },
     },
   },
