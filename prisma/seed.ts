@@ -46,7 +46,7 @@ async function readCsv(filePath: string): Promise<CsvData[]> {
 
 function parseDate(dateString: string): Date {
     const [day, month, year] = dateString.split('/').map((part) => parseInt(part, 10));
-    return new Date(year, month - 1, day);
+    return new Date(Date.UTC(year, month - 1, day));
 }
 
 // Seed the data into the database
