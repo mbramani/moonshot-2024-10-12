@@ -42,7 +42,12 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({
             status: 'success',
-            data: { user },
+            data: {
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    createdAt: user.createdAt,
+            } },
             message: 'User data retrieved successfully'
         });
 
