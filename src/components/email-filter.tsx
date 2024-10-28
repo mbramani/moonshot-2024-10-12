@@ -1,5 +1,5 @@
 import { filterTypes, useEmail } from "@/contexts/email-context";
-import classNames from "@/utils/class-names";
+import { classNames } from "@/utils/class-names";
 
 export function EmailFilter() {
   const { activeFilter, actions } = useEmail();

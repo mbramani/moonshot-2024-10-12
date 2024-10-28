@@ -1,5 +1,5 @@
 import { useEmail } from "@/contexts/email-context";
-import classNames from "@/utils/class-names";
+import { classNames } from "@/utils/class-names";
 
 export function EmailPagination() {
   const { activeFilter, currentPage, actions } = useEmail();

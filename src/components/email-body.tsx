@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useEmail } from "@/contexts/email-context";
 import { StatusMessage } from "./status-message";
 import Spinner from "./spinner";
-import formatTimestamp from "@/utils/format-timestamp";
+import { formatTimestamp } from "@/utils/format-timestamp";
 
 export function EmailBody() {
   const {

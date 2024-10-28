@@ -65,7 +65,7 @@ function fetchReducer<T, E = undefined>(
   }
 }
 
-function useFetch<T, E = undefined>(
+export function useFetch<T, E = undefined>(
   url: string,
 ): [FetchState<T, E>, (options?: FetchOptions<E>) => Promise<void>] {
   const initialState: FetchState<T, E> = {
@@ -134,5 +134,3 @@ function useFetch<T, E = undefined>(
 
   return [state as FetchState<T, E>, fetchData];
 }
-
-export default useFetch;

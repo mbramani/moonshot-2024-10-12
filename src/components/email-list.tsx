@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { StatusMessage } from "./status-message";
 import { useEmail } from "@/contexts/email-context";
-import classNames from "@/utils/class-names";
-import formatTimestamp from "@/utils/format-timestamp";
+import { classNames } from "@/utils/class-names";
+import { formatTimestamp } from "@/utils/format-timestamp";
 import Spinner from "./spinner";
 
 export function EmailList() {

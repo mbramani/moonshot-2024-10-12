@@ -1,4 +1,4 @@
-export default function formatTimestamp(timestamp: number): string {
+export function formatTimestamp(timestamp: number): string {
   const date = new Date(timestamp);
 
   const day = String(date.getDate()).padStart(2, "0");

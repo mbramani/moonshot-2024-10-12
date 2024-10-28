@@ -70,7 +70,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       status: "success",
       message: "User registered successfully",
-      data: { userId: user.id, email: user.email },
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          createdAt: user.createdAt,
+        },
+      },
     });
   } catch (error) {
     console.error("Error registering user:", error);

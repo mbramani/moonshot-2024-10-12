@@ -28,12 +28,20 @@ export async function POST(req: NextRequest) {
           status: "error",
           errorCode: "INVALID_CREDENTIALS",
           message: "Invalid credentials. Please check your email and password.",
+          errors: {
+            email: !user
+              ? "No account found with this email address"
+              : undefined,
+            password: user
+              ? "The password you entered is incorrect"
+              : undefined,
+          },
         },
         { status: 401 },
       );
     }
 
-    const token = createJWT(user.id);
+    const token = await createJWT(user.id);
     return NextResponse.json({
       status: "success",
       data: { token },
