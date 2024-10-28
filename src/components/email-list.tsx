@@ -18,16 +18,16 @@ export function EmailList() {
 
   const getInitial = useCallback(
     (name: string) => name.charAt(0).toUpperCase(),
-    []
+    [],
   );
   const truncateText = useCallback(
     (text: string, limit: number) =>
       text.length > limit ? `${text.slice(0, limit)} ...` : text,
-    []
+    [],
   );
 
   const statusMessageClass = classNames(
-    selectedEmailId ? "col-span-2 lg:col-span-2" : "col-span-6"
+    selectedEmailId ? "col-span-2 lg:col-span-2" : "col-span-6",
   );
 
   if (loading)
@@ -55,7 +55,7 @@ export function EmailList() {
     <section
       className={classNames(
         "flex flex-col gap-y-4 p-2 w-full",
-        statusMessageClass
+        statusMessageClass,
       )}
       aria-label="Email List"
       role="region"
@@ -70,7 +70,7 @@ export function EmailList() {
                 ? "border-background-accent"
                 : "border-border-muted ",
               readEmails.includes(id) ? "bg-background-read" : "bg-white",
-              "hover:border-background-accent cursor-pointer focus:outline-none  focus:ring-1 ring-offset-0 focus:ring-background-accent"
+              "hover:border-background-accent cursor-pointer focus:outline-none  focus:ring-1 ring-offset-0 focus:ring-background-accent",
             )}
             onClick={() => actions.selectEmail(id)}
             onKeyDown={(e) => {

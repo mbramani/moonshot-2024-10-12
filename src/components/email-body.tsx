@@ -16,12 +16,12 @@ export function EmailBody() {
 
   const selectedEmail = useMemo(
     () => emails.find((email) => email.id === selectedEmailId) ?? null,
-    [selectedEmailId, emails]
+    [selectedEmailId, emails],
   );
 
   const senderInitial = useMemo(
     () => selectedEmail?.from.name.charAt(0).toUpperCase() ?? "",
-    [selectedEmail]
+    [selectedEmail],
   );
 
   if (selectedEmailId === null) return null;

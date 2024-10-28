@@ -62,11 +62,11 @@ export function EmailProvider({
   const [emailBodyError, setEmailBodyError] = useState<string | null>(null);
   const [readEmails, setReadEmails] = useLocalStorage<string[]>(
     "read-emails",
-    []
+    [],
   );
   const [favoriteEmails, setFavoriteEmails] = useLocalStorage<string[]>(
     "favorite-emails",
-    []
+    [],
   );
 
   useEffect(() => {
@@ -110,8 +110,8 @@ export function EmailProvider({
 
       setEmails((prev) =>
         prev.map((email) =>
-          email.id === emailId ? { ...email, body: data?.body } : email
-        )
+          email.id === emailId ? { ...email, body: data?.body } : email,
+        ),
       );
     } catch (err: unknown) {
       setEmailBodyError(handleFetchError(err));
@@ -138,7 +138,7 @@ export function EmailProvider({
     setFavoriteEmails((prev) =>
       prev.includes(emailId)
         ? prev.filter((id) => id !== emailId)
-        : [...prev, emailId]
+        : [...prev, emailId],
     );
   }
 

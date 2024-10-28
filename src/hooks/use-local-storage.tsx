@@ -12,7 +12,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     } catch (error) {
       console.error(
         `Error reading localStorage key "${key}":`,
-        (error as Error)?.message
+        (error as Error)?.message,
       );
       return initialValue;
     }
@@ -24,7 +24,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     } catch (error) {
       console.error(
         `Error setting localStorage key "${key}":`,
-        (error as Error)?.message
+        (error as Error)?.message,
       );
     }
   }, [key, value]);
