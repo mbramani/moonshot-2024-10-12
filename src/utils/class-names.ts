@@ -1,5 +1,5 @@
 export function classNames(
-  ...classes: (string | undefined | null | false)[]
+    ...classes: (string | undefined | null | false)[]
 ): string {
-  return classes.filter(Boolean).join(" ");
+    return classes.filter(Boolean).join(' ');
 }

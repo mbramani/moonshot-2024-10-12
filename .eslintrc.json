@@ -1,22 +1,12 @@
 {
-  "parserOptions": {
-    "sourceType": "module"
-  },
-  "env": { "es6": true },
-  "extends": [
-    "next/core-web-vitals",
-    "next/typescript",
-    "plugin:import/recommended",
-    "plugin:import/typescript"
-  ],
-  "rules": {
-    "no-unused-vars": "warn",
-    "simple-import-sort/sort": "error",
-    "sort-imports": "off",
-    "prettier/prettier": "error",
-    "import/first": "error",
-    "import/newline-after-import": "error",
-    "import/no-duplicates": "error"
-  },
-  "plugins": ["simple-import-sort", "import"]
+    "parserOptions": {
+        "sourceType": "module"
+    },
+    "env": { "es6": true },
+    "extends": ["next/core-web-vitals", "next/typescript", "prettier"],
+    "rules": {
+        "no-unused-vars": "warn",
+        "sort-imports": "warn",
+        "@typescript-eslint/no-unused-vars": "warn"
+    }
 }
