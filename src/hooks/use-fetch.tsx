@@ -86,13 +86,9 @@ export function useFetch<T, E = undefined>(
             const queryString = options.queryParams
                 ? '?' +
                   new URLSearchParams(
-                      Object.entries(options.queryParams).reduce(
-                          (acc, [key, value]) => {
-                              if (value !== undefined) acc[key] = String(value);
-                              return acc;
-                          },
-                          {} as Record<string, string>
-                      )
+                      Object.entries(options.queryParams)
+                          .filter(([, value]) => value != null)
+                          .map(([key, value]) => [key, String(value)])
                   ).toString()
                 : '';
 

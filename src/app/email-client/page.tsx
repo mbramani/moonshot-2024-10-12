@@ -1,9 +1,9 @@
 'use client';
 
-import { EmailBody } from '@/components/email-body';
-import { EmailFilter } from '@/components/email-filter';
-import { EmailList } from '@/components/email-list';
-import { EmailPagination } from '@/components/email-pagination';
+import { EmailBody } from '@/components/email/email-body';
+import { EmailFilter } from '@/components/email/email-filter';
+import { EmailList } from '@/components/email/email-list';
+import { EmailPagination } from '@/components/email/email-pagination';
 
 export default function EmailClientPage() {
     return (

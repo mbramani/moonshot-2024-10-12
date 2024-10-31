@@ -9,14 +9,12 @@ import {
 
 import { Header } from '@/components/header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { User } from '@prisma/client';
+import { UserWithoutPassword } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
 import { useFetch } from '@/hooks/use-fetch';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useRouter } from 'next/navigation';
-
-type UserWithoutPassword = Omit<User, 'password'>;
 
 export default function AuthLayout({
     children,
@@ -25,13 +23,18 @@ export default function AuthLayout({
 }>) {
     const router = useRouter();
     const [authToken] = useLocalStorage<string>('auth-token', '');
+
     const [userQueryState, executeUserQuery] = useFetch<{
         user: UserWithoutPassword;
     }>('/api/auth/user');
 
     useEffect(() => {
-        executeUserQuery({ headers: { Authorization: `Bearer ${authToken}` } });
-    }, [executeUserQuery, authToken]);
+        if (authToken) {
+            executeUserQuery({
+                headers: { Authorization: `Bearer ${authToken}` },
+            });
+        }
+    }, [authToken, executeUserQuery]);
 
     useEffect(() => {
         if (userQueryState?.data?.user) {
@@ -42,7 +45,7 @@ export default function AuthLayout({
 
             router.push('/dashboard');
         }
-    }, [userQueryState?.data, router]);
+    }, [userQueryState, router]);
 
     return (
         <>

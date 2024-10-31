@@ -17,6 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { DateRange } from 'react-day-picker';
@@ -25,15 +26,13 @@ import { Label } from './ui/label';
 import { ResetIcon } from '@radix-ui/react-icons';
 import { Skeleton } from './ui/skeleton';
 import { classNames } from '@/utils/class-names';
+import { parseISODate } from '@/utils/parse-iso-date';
 import { toast } from '@/hooks/use-toast';
+import { useCookies } from '@/hooks/use-cookies';
 import { useFetch } from '@/hooks/use-fetch';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { useRouter } from 'next/navigation';
 
 interface FilterFormProps {
-    dateRange: DateRange | undefined;
-    ageGroup: AgeGroup | 'ALL';
-    gender: Gender | 'ALL';
     loading?: boolean;
     onAnalyticsDataChange: Dispatch<
         SetStateAction<{ data: FeatureUsage[]; loading: boolean }>
@@ -47,33 +46,44 @@ interface FilterFormState {
     gender: Gender | 'ALL';
 }
 
-interface AnalyticsQueryParams
-    extends Record<string, string | number | boolean | undefined> {
+interface QueryParams extends Record<string, string | undefined> {
     age_group?: AgeGroup;
     gender?: Gender;
     date_from?: string;
     date_to?: string;
 }
 
+const defaultFilterFormState: FilterFormState = {
+    ageGroup: 'ALL',
+    gender: 'ALL',
+    dateRange: {
+        from: parseISODate('2022-10-04') ?? undefined,
+        to: parseISODate('2022-10-05') ?? undefined,
+    },
+};
+const COOKIE_NAME = 'filter-preferences';
+
 export function FilterForm({
-    ageGroup,
-    dateRange,
-    gender,
     loading,
     onAnalyticsDataChange,
     className,
 }: FilterFormProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [authToken] = useLocalStorage<string>('auth-token', '');
+
     const [analyticsQueryState, executeAnalyticsQuery] = useFetch<
         FeatureUsage[],
-        AnalyticsQueryParams
-    >('api/analytics');
-    const [filterFormState, setFilterFormState] = useState<FilterFormState>({
-        ageGroup,
-        dateRange,
-        gender,
-    });
+        QueryParams
+    >('/api/analytics');
+
+    const [preferencesCookie, setPreferencesCookie] = useCookies<QueryParams>(
+        COOKIE_NAME,
+        getDefaultCookieValues()
+    );
+    const [filterFormState, setFilterFormState] = useState<FilterFormState>(
+        getInitialFilterState
+    );
 
     useEffect(() => {
         if (analyticsQueryState.error) {
@@ -82,29 +92,65 @@ export function FilterForm({
                 description: analyticsQueryState.error,
                 variant: 'destructive',
             });
-        } else if (!analyticsQueryState.loading && analyticsQueryState.data) {
-            toast({
-                title: 'Analytics data loaded',
-                description: analyticsQueryState.message,
+        } else {
+            if (analyticsQueryState.data) {
+                toast({
+                    title: 'Analytics data loaded',
+                    description: analyticsQueryState.message,
+                });
+            }
+            onAnalyticsDataChange({
+                loading: analyticsQueryState.loading,
+                data: analyticsQueryState.data ?? [],
             });
         }
-        onAnalyticsDataChange({
-            loading: analyticsQueryState.loading,
-            data: analyticsQueryState.data ?? [],
-        });
     }, [analyticsQueryState, onAnalyticsDataChange]);
 
-    function prepareQueryParams(
-        formState: FilterFormState
-    ): AnalyticsQueryParams {
-        const { ageGroup, gender, dateRange } = formState;
+    function getInitialFilterState(): FilterFormState {
+        const ageGroup =
+            (searchParams.get('age_group') as AgeGroup) ||
+            preferencesCookie.age_group ||
+            defaultFilterFormState.ageGroup;
+        const gender =
+            (searchParams.get('gender') as Gender) ||
+            preferencesCookie.gender ||
+            defaultFilterFormState.gender;
+        const dateRange = {
+            from:
+                parseISODate(
+                    searchParams.get('date_from') ??
+                        preferencesCookie.date_from ??
+                        ''
+                ) || defaultFilterFormState.dateRange?.from,
+            to:
+                parseISODate(
+                    searchParams.get('date_to') ??
+                        preferencesCookie.date_to ??
+                        ''
+                ) || defaultFilterFormState.dateRange?.to,
+        };
+
+        return { ageGroup, gender, dateRange };
+    }
+
+    function getDefaultCookieValues() {
         return {
-            age_group: ageGroup !== 'ALL' ? ageGroup : undefined,
-            gender: gender !== 'ALL' ? gender : undefined,
-            date_from: dateRange?.from?.toLocaleDateString('en-CA'),
+            age_group:
+                (searchParams.get('age_group') as AgeGroup) ||
+                defaultFilterFormState.ageGroup,
+            gender:
+                (searchParams.get('gender') as Gender) ||
+                defaultFilterFormState.gender,
+            date_from:
+                searchParams.get('date_from') ||
+                defaultFilterFormState.dateRange?.from?.toLocaleDateString(
+                    'en-CA'
+                ),
             date_to:
-                dateRange?.to?.toLocaleDateString('en-CA') ??
-                dateRange?.from?.toLocaleDateString('en-CA'),
+                searchParams.get('date_to') ||
+                defaultFilterFormState.dateRange?.to?.toLocaleDateString(
+                    'en-CA'
+                ),
         };
     }
 
@@ -116,31 +162,57 @@ export function FilterForm({
     }
 
     function handleApplyFilters() {
-        const queryParams = prepareQueryParams(filterFormState);
+        const queryParams = getQueryParams(filterFormState);
+
         updateURL(queryParams);
+
+        setPreferencesCookie(COOKIE_NAME, queryParams, 7, {
+            path: '/',
+            sameSite: 'Strict',
+        });
+
         executeAnalyticsQuery({
             headers: { Authorization: `Bearer ${authToken}` },
-            queryParams,
+            queryParams: { ...queryParams },
         });
     }
 
+    function getQueryParams(formState: FilterFormState): QueryParams {
+        return {
+            age_group:
+                formState.ageGroup !== 'ALL' ? formState.ageGroup : undefined,
+            gender: formState.gender !== 'ALL' ? formState.gender : undefined,
+            date_from: formState.dateRange?.from?.toLocaleDateString('en-CA'),
+            date_to:
+                formState.dateRange?.to?.toLocaleDateString('en-CA') ||
+                formState.dateRange?.from?.toLocaleDateString('en-CA'),
+        };
+    }
     function handleResetFilters() {
-        const resetFilters: FilterFormState = {
-            ageGroup: 'ALL',
+        const resetFilters = {
+            ...defaultFilterFormState,
             dateRange: undefined,
-            gender: 'ALL',
         };
         setFilterFormState(resetFilters);
-        updateURL(prepareQueryParams(resetFilters));
+
+        const queryParams = getQueryParams(resetFilters);
+
+        updateURL(queryParams);
+
+        setPreferencesCookie(COOKIE_NAME, queryParams, 7, {
+            path: '/',
+            sameSite: 'Strict',
+        });
+
         toast({
             title: 'Filters reset',
             description: 'All filters have been reset to default values.',
         });
     }
 
-    function updateURL(queryParams: AnalyticsQueryParams) {
+    function updateURL(params: Record<string, string | undefined>) {
         const searchParams = new URLSearchParams();
-        Object.entries(queryParams).forEach(
+        Object.entries(params).forEach(
             ([key, value]) => value && searchParams.append(key, String(value))
         );
         router.push(`?${searchParams.toString()}`, { scroll: false });

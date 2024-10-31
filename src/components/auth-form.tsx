@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
-import { User as PrismaUser } from '@prisma/client';
+import { UserWithoutPassword } from '@/types';
 import { classNames } from '@/utils/class-names';
 import { toast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
@@ -12,12 +12,10 @@ import { useFetch } from '@/hooks/use-fetch';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useRouter } from 'next/navigation';
 
-type User = Omit<PrismaUser, 'password'>;
-
-type AuthFormState = {
+interface AuthFormState {
     email: string;
     password: string;
-};
+}
 
 interface AuthFormProps {
     type: 'login' | 'register';
@@ -25,11 +23,14 @@ interface AuthFormProps {
 
 type AuthResponse<T extends 'login' | 'register'> = T extends 'login'
     ? { token: string }
-    : { user: User };
+    : { user: UserWithoutPassword };
 
 export function AuthForm({ type }: AuthFormProps) {
     const router = useRouter();
-    const [authToken, setAuthToken] = useLocalStorage<string>('auth-token', '');
+    const [_authToken, setAuthToken] = useLocalStorage<string>(
+        'auth-token',
+        ''
+    );
 
     const endpoint = `/api/auth/${type}`;
     const [{ data, error, message, loading, errors }, executeAuthQuery] =
@@ -37,17 +38,11 @@ export function AuthForm({ type }: AuthFormProps) {
 
     useEffect(() => {
         if (data) {
-            console.log('token' in data);
             if (type === 'login' && 'token' in data) {
-                console.log('token' in data, data);
                 setAuthToken(data.token);
             }
-
             toast({
-                title:
-                    type === 'login'
-                        ? 'Logged in successfully'
-                        : 'Registered successfully',
+                title: `${type === 'login' ? 'Logged in' : 'Registered'} successfully`,
                 description: message,
             });
 
@@ -59,12 +54,16 @@ export function AuthForm({ type }: AuthFormProps) {
                 variant: 'destructive',
             });
         }
-    }, [data, error, message, type, setAuthToken, router]);
+    }, [data, error, message, router, setAuthToken, type]);
 
     function handleAuthFormSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const data = Object.fromEntries(formData.entries()) as AuthFormState;
+        const entries = Object.fromEntries(formData.entries());
+        const data: AuthFormState = {
+            email: entries.email as string,
+            password: entries.password as string,
+        };
         executeAuthQuery({ method: 'POST', body: data });
     }
 

@@ -1,22 +1,27 @@
 'use client';
 
-import { AgeGroup, FeatureUsage, Gender, User } from '@prisma/client';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 
 import { FeatureCharts } from '@/components/feature-charts';
+import { FeatureUsage } from '@prisma/client';
 import { FilterForm } from '@/components/filter-form';
 import { Header } from '@/components/header';
-import { parseISODate } from '@/utils/parse-iso-date';
+import { Skeleton } from '@/components/ui/skeleton';
+import { UserWithoutPassword } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { useFetch } from '@/hooks/use-fetch';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-
-type UserWithoutPassword = Omit<User, 'password'>;
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [authToken, setAuthToken] = useLocalStorage<string>('auth-token', '');
 
     const [userQueryState, executeUserQuery] = useFetch<{
@@ -28,26 +33,20 @@ export default function DashboardPage() {
         loading: boolean;
     }>({ data: [], loading: false });
 
-    const defaultDateRange = {
-        from: new Date('2022-10-04'),
-        to: new Date('2022-10-05'),
-    };
-
-    const dateRange = {
-        from:
-            parseISODate(searchParams.get('date_from') ?? '') ||
-            defaultDateRange.from,
-        to:
-            parseISODate(searchParams.get('date_to') ?? '') ||
-            defaultDateRange.to,
-    };
-
-    const ageGroup = (searchParams.get('age_group') as AgeGroup) ?? 'ALL';
-    const gender = (searchParams.get('gender') as Gender) ?? 'ALL';
-
     useEffect(() => {
-        executeUserQuery({ headers: { Authorization: `Bearer ${authToken}` } });
-    }, [executeUserQuery, authToken]);
+        if (authToken) {
+            executeUserQuery({
+                headers: { Authorization: `Bearer ${authToken}` },
+            });
+        } else {
+            toast({
+                title: 'Login Required',
+                description: 'Please log in to access the dashboard.',
+                variant: 'destructive',
+            });
+            router.push('/login');
+        }
+    }, [executeUserQuery, authToken, router]);
 
     useEffect(() => {
         if (userQueryState.error) {
@@ -67,12 +66,9 @@ export default function DashboardPage() {
                 loading={userQueryState.loading}
                 isAuthenticated={Boolean(userQueryState.data?.user?.id)}
             />
-            <main className="flex flex-col gap-4 bg-background p-4 ">
-                <Suspense>
+            <main className="flex flex-col gap-4 bg-background p-4">
+                <Suspense fallback={<FilterFormSkeleton />}>
                     <FilterForm
-                        dateRange={dateRange}
-                        ageGroup={ageGroup}
-                        gender={gender}
                         loading={userQueryState.loading}
                         onAnalyticsDataChange={setAnalyticsDataState}
                     />
@@ -85,5 +81,35 @@ export default function DashboardPage() {
                 />
             </main>
         </>
+    );
+}
+
+function FilterFormSkeleton() {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>
+                    <Skeleton className="h-6 w-32" />
+                </CardTitle>
+                <CardDescription>
+                    <Skeleton className="h-4 w-64" />
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {[...Array(3)].map((_, index) => (
+                        <div key={index} className="space-y-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                    ))}
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    {[...Array(3)].map((_, index) => (
+                        <Skeleton key={index} className="h-10 w-24" />
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
     );
 }

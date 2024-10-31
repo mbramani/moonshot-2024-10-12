@@ -27,7 +27,7 @@ export function DateRangePicker({
     dateRange,
     setDateRange,
 }: DateRangePickerProps) {
-    const formatDate = (date: Date | undefined) =>
+    const formatDate = (date?: Date) =>
         date?.toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'short',

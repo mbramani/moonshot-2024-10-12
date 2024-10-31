@@ -17,7 +17,7 @@ export default function AnalyticsLayout({
     return (
         <ThemeProvider attribute="class" defaultTheme="system">
             <Toaster />
-            <Suspense>{children}</Suspense>
+            {children}
         </ThemeProvider>
     );
 }

@@ -26,7 +26,10 @@ export function Header({
     const router = useRouter();
     const { setTheme } = useTheme();
     const { toast } = useToast();
-    const [authToken, setAuthToken] = useLocalStorage<string>('auth-token', '');
+    const [_authToken, setAuthToken] = useLocalStorage<string>(
+        'auth-token',
+        ''
+    );
 
     function handleLogout() {
         setAuthToken('');

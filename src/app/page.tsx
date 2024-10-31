@@ -14,7 +14,7 @@ export default function Home() {
                 </header>
 
                 <nav>
-                    <ul className="md:flex justify-center space-x-2 sm:space-y-2 md:space-y-0 text-gray-500 text-sm font-medium">
+                    <ul className="md:flex justify-center space-x-3 space-y-2 md:space-y-0  text-gray-500 text-sm font-medium">
                         <li>
                             <Link
                                 href="/email-client"
