@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { comparePassword, createJWT } from '@/utils/auth';
 
-import prisma from '@/db/prisma'
+import prisma from '@/db/prisma';
 
 export async function POST(req: NextRequest) {
     try {

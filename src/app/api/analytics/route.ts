@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { parseISODate } from '@/utils/parse-iso-date';
 import prisma from '@/db/prisma';
-
-function parseDate(dateString: string): Date | null {
-    const [day, month, year] = dateString.split('/').map(Number);
-    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-    return new Date(Date.UTC(year, month - 1, day));
-}
 
 export async function GET(req: NextRequest) {
     try {
@@ -15,30 +10,46 @@ export async function GET(req: NextRequest) {
 
         const { searchParams } = new URL(req.url);
 
-        const startDay = searchParams.get('start_day');
-        const endDay = searchParams.get('end_day');
+        const dateFrom = searchParams.get('date_from');
+        const dateTo = searchParams.get('date_to');
         const ageGroup = searchParams.get('age_group') as
             | 'AGE_15_25'
             | 'OVER_25'
             | null;
         const gender = searchParams.get('gender') as 'MALE' | 'FEMALE' | null;
 
-        const startDate = startDay ? parseDate(startDay) : null;
-        const endDate = endDay ? parseDate(endDay) : null;
+        const startDate = dateFrom ? parseISODate(dateFrom) : null;
+        const endDate = dateTo ? parseISODate(dateTo) : null;
 
-        if ((startDay && !startDate) || (endDay && !endDate)) {
+        if (!dateFrom && !dateTo) {
+            return NextResponse.json(
+                {
+                    status: 'error',
+                    errorCode: 'VALIDATION_ERROR',
+                    message:
+                        'Bad Request: start date and end date are required',
+                    errors: {
+                        date_from: 'Date from is required',
+                        date_to: 'Date to is required',
+                    },
+                },
+                { status: 400 }
+            );
+        }
+
+        if ((dateFrom && !startDate) || (dateTo && !endDate)) {
             return NextResponse.json(
                 {
                     status: 'error',
                     errorCode: 'VALIDATION_ERROR',
                     message: 'Bad Request: Invalid date format',
                     errors: {
-                        start_day:
-                            startDay && !startDate
+                        date_from:
+                            dateFrom && !startDate
                                 ? 'Invalid date format'
                                 : undefined,
-                        end_day:
-                            endDay && !endDate
+                        date_to:
+                            dateTo && !endDate
                                 ? 'Invalid date format'
                                 : undefined,
                     },

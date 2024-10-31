@@ -3,8 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
 import { User as PrismaUser } from '@prisma/client';
-import { SymbolIcon } from '@radix-ui/react-icons';
 import { classNames } from '@/utils/class-names';
 import { toast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 
 type User = Omit<PrismaUser, 'password'>;
 
-type AuthFormSchema = {
+type AuthFormState = {
     email: string;
     password: string;
 };
@@ -33,7 +33,7 @@ export function AuthForm({ type }: AuthFormProps) {
 
     const endpoint = `/api/auth/${type}`;
     const [{ data, error, message, loading, errors }, executeAuthQuery] =
-        useFetch<AuthResponse<typeof type>, AuthFormSchema>(endpoint);
+        useFetch<AuthResponse<typeof type>, AuthFormState>(endpoint);
 
     useEffect(() => {
         if (data) {
@@ -51,26 +51,22 @@ export function AuthForm({ type }: AuthFormProps) {
                 description: message,
             });
 
-            setTimeout(() => {
-                router.push(type === 'login' ? '/dashboard' : '/login');
-            }, 1500);
+            router.push(type === 'login' ? '/dashboard' : '/login');
         } else if (error) {
             toast({
-                title: 'Error during authentication',
+                title: `Error during ${type}`,
                 description: error,
                 variant: 'destructive',
             });
         }
     }, [data, error, message, type, setAuthToken, router]);
 
-    const handleAuthFormSubmit = async (
-        e: React.FormEvent<HTMLFormElement>
-    ) => {
+    function handleAuthFormSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const data = Object.fromEntries(formData.entries()) as AuthFormSchema;
-        await executeAuthQuery({ method: 'POST', body: data });
-    };
+        const data = Object.fromEntries(formData.entries()) as AuthFormState;
+        executeAuthQuery({ method: 'POST', body: data });
+    }
 
     return (
         <form className="space-y-4" onSubmit={handleAuthFormSubmit}>
@@ -142,7 +138,7 @@ export function AuthForm({ type }: AuthFormProps) {
                 {loading ? (
                     <span className="flex items-center justify-center">
                         <span className="animate-spin-slow mr-2">
-                            <SymbolIcon />
+                            <Loader2 className="animate-spin-slow" />
                         </span>
                         Loading...
                     </span>

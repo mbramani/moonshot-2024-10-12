@@ -9,6 +9,12 @@ import {
 
 import { AuthForm } from '@/components/auth-form';
 import Link from 'next/link';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Login',
+    description: 'Login page for the application',
+};
 
 export default function LoginPage() {
     return (
@@ -28,6 +34,7 @@ export default function LoginPage() {
                     <Link
                         href="/register"
                         className="underline underline-offset-4 hover:text-primary"
+                        aria-label="Create a new account"
                     >
                         Register
                     </Link>

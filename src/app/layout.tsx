@@ -16,7 +16,10 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={`${openSans.className} antialiased`}>
+            <body
+                className={`${openSans.className} antialiased`}
+                suppressHydrationWarning
+            >
                 {children}
             </body>
         </html>
