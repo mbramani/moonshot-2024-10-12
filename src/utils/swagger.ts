@@ -1,4 +1,4 @@
-import "server-only"
+import 'server-only';
 
 import { createSwaggerSpec } from 'next-swagger-doc';
 

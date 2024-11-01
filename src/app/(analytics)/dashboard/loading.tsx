@@ -7,7 +7,7 @@ import {
 import { FilterFormSkeleton } from '@/components/skeletons/filter-form-skeleton';
 import { HeaderSkeleton } from '@/components/skeletons/header-skeleton';
 
-export default function Loading() {
+export default function DashboardLoading() {
     return (
         <>
             <HeaderSkeleton />

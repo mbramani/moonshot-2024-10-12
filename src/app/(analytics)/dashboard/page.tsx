@@ -21,6 +21,7 @@ export default function DashboardPage() {
         () => `${pathname}?${searchParams.toString()}`,
         [pathname, searchParams]
     );
+
     const [authToken, setAuthToken] = useLocalStorage<string>('auth-token', '');
 
     const [userQueryState, executeUserQuery] = useFetch<{

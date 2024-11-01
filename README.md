@@ -4,21 +4,21 @@ This is the solution repository for Moonshot 2024-10-12 with solutions for Q1 an
 
 ## Tech Stack
 
-- **Next.js**: React framework for server-side rendering and static site generation.
-- **TypeScript**: Typed superset of JavaScript that compiles to plain JavaScript.
-- **Prisma**: Next-generation ORM for Node.js and TypeScript.
-- **Tailwind CSS**: Utility-first CSS framework for rapid UI development.
-- **shadcn/ui**: Component library for building accessible and customizable UI components.
-- **Recharts**: A composable charting library built on React components.
-- **Swagger**: API documentation tool for designing and documenting RESTful APIs.
-- **Vercel**: Deployment platform for modern web applications.
+-   **Next.js**: React framework for server-side rendering and static site generation.
+-   **TypeScript**: Typed superset of JavaScript that compiles to plain JavaScript.
+-   **Prisma**: Next-generation ORM for Node.js and TypeScript.
+-   **Tailwind CSS**: Utility-first CSS framework for rapid UI development.
+-   **shadcn/ui**: Component library for building accessible and customizable UI components.
+-   **Recharts**: A composable charting library built on React components.
+-   **Swagger**: API documentation tool for designing and documenting RESTful APIs.
+-   **Vercel**: Deployment platform for modern web applications.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v14 or later)
-- npm or yarn
+-   Node.js (v14 or later)
+-   npm or yarn
 
 ### Installation
 

@@ -87,22 +87,23 @@ export function FilterForm({
     );
 
     useEffect(() => {
+        onAnalyticsDataChange({
+            loading: analyticsQueryState.loading,
+            data: analyticsQueryState.data ?? [],
+        });
+
         if (analyticsQueryState.error) {
             toast({
-                title: 'An error occurred',
-                description: analyticsQueryState.error,
+                title: 'Error loading analytics data',
+                description:
+                    analyticsQueryState.error ||
+                    'An error occurred while fetching analytics data.',
                 variant: 'destructive',
             });
-        } else {
-            if (analyticsQueryState.data) {
-                toast({
-                    title: 'Analytics data loaded',
-                    description: analyticsQueryState.message,
-                });
-            }
-            onAnalyticsDataChange({
-                loading: analyticsQueryState.loading,
-                data: analyticsQueryState.data ?? [],
+        } else if (analyticsQueryState.data) {
+            toast({
+                title: 'Analytics data loaded',
+                description: analyticsQueryState.message,
             });
         }
     }, [analyticsQueryState, onAnalyticsDataChange]);
@@ -155,6 +156,32 @@ export function FilterForm({
         };
     }
 
+    function getQueryParams(): QueryParams {
+        return {
+            age_group:
+                filterFormState.ageGroup !== 'ALL'
+                    ? filterFormState.ageGroup
+                    : undefined,
+            gender:
+                filterFormState.gender !== 'ALL'
+                    ? filterFormState.gender
+                    : undefined,
+            date_from:
+                filterFormState.dateRange?.from?.toLocaleDateString('en-CA'),
+            date_to:
+                filterFormState.dateRange?.to?.toLocaleDateString('en-CA') ||
+                filterFormState.dateRange?.from?.toLocaleDateString('en-CA'),
+        };
+    }
+
+    function updateURL(params: Record<string, string | undefined>) {
+        const searchParams = new URLSearchParams();
+        Object.entries(params).forEach(
+            ([key, value]) => value && searchParams.append(key, String(value))
+        );
+        router.push(`?${searchParams.toString()}`, { scroll: false });
+    }
+
     function handleValueChange<T extends keyof FilterFormState>(
         key: T,
         value: FilterFormState[T]
@@ -163,7 +190,7 @@ export function FilterForm({
     }
 
     function handleApplyFilters() {
-        const queryParams = getQueryParams(filterFormState);
+        const queryParams = getQueryParams();
 
         updateURL(queryParams);
 
@@ -178,29 +205,12 @@ export function FilterForm({
         });
     }
 
-    function getQueryParams(formState: FilterFormState): QueryParams {
-        return {
-            age_group:
-                formState.ageGroup !== 'ALL' ? formState.ageGroup : undefined,
-            gender: formState.gender !== 'ALL' ? formState.gender : undefined,
-            date_from: formState.dateRange?.from?.toLocaleDateString('en-CA'),
-            date_to:
-                formState.dateRange?.to?.toLocaleDateString('en-CA') ||
-                formState.dateRange?.from?.toLocaleDateString('en-CA'),
-        };
-    }
     function handleResetFilters() {
-        const resetFilters = {
-            ...defaultFilterFormState,
-            dateRange: undefined,
-        };
-        setFilterFormState(resetFilters);
+        setFilterFormState(defaultFilterFormState);
 
-        const queryParams = getQueryParams(resetFilters);
+        updateURL({});
 
-        updateURL(queryParams);
-
-        setPreferencesCookie(COOKIE_NAME, queryParams, 7, {
+        setPreferencesCookie(COOKIE_NAME, {}, 7, {
             path: '/',
             sameSite: 'Strict',
         });
@@ -209,14 +219,6 @@ export function FilterForm({
             title: 'Filters reset',
             description: 'All filters have been reset to default values.',
         });
-    }
-
-    function updateURL(params: Record<string, string | undefined>) {
-        const searchParams = new URLSearchParams();
-        Object.entries(params).forEach(
-            ([key, value]) => value && searchParams.append(key, String(value))
-        );
-        router.push(`?${searchParams.toString()}`, { scroll: false });
     }
 
     async function handleShareDashboard() {
