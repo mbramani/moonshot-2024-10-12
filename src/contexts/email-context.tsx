@@ -4,15 +4,18 @@ import {
     Dispatch,
     SetStateAction,
     createContext,
+    useCallback,
     useContext,
     useEffect,
     useMemo,
+    useReducer,
     useState,
 } from 'react';
 
+import { set } from 'date-fns';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
-interface IEmail {
+interface Email {
     id: string;
     from: {
         email: string;
@@ -27,15 +30,21 @@ interface IEmail {
 export const filterTypes = ['All', 'Read', 'Unread', 'Favorites'] as const;
 type FilterType = (typeof filterTypes)[number];
 
-interface IEmailContext {
-    emails: IEmail[];
+interface EmailContext {
+    emailApiState: {
+        data: Email[];
+        loading: boolean;
+        error: string;
+    };
+    emailBodyApiState: {
+        data?: string;
+        loading: boolean;
+        error: string;
+    };
+    filteredEmails: Email[];
     selectedEmailId: string | null;
     readEmails: string[];
     favoriteEmails: string[];
-    loading: boolean;
-    error: string | null;
-    emailBodyLoading: boolean;
-    emailBodyError: string | null;
     currentPage: number;
     activeFilter: FilterType;
     actions: {
@@ -46,21 +55,70 @@ interface IEmailContext {
     };
 }
 
-export const EmailContext = createContext<IEmailContext | null>(null);
-
+export const EmailContext = createContext<EmailContext | null>(null);
 const API_BASE_URL = 'https://flipkart-email-mock.now.sh';
 
-export function EmailProvider({
-    children,
-}: Readonly<{ children: React.ReactNode }>) {
-    const [emails, setEmails] = useState<IEmail[]>([]);
+type EmailApiState =
+    | { type: 'FETCH_INIT' }
+    | { type: 'FETCH_SUCCESS'; payload: Email[] }
+    | { type: 'FETCH_FAILURE'; error: string };
+
+type EmailBodyApiState =
+    | { type: 'FETCH_INIT' }
+    | { type: 'FETCH_SUCCESS'; payload: string }
+    | { type: 'FETCH_FAILURE'; error: string };
+
+function emailApiReducer(
+    state: EmailContext['emailApiState'],
+    action: EmailApiState
+) {
+    switch (action.type) {
+        case 'FETCH_INIT':
+            return { ...state, loading: true, error: '' };
+        case 'FETCH_SUCCESS':
+            return { data: action.payload, loading: false, error: '' };
+        case 'FETCH_FAILURE':
+            return { ...state, loading: false, error: action.error };
+        default:
+            return state;
+    }
+}
+
+function emailBodyApiReducer(
+    state: EmailContext['emailBodyApiState'],
+    action: EmailBodyApiState
+) {
+    switch (action.type) {
+        case 'FETCH_INIT':
+            return { ...state, loading: true, error: '' };
+        case 'FETCH_SUCCESS':
+            return { data: action.payload, loading: false, error: '' };
+        case 'FETCH_FAILURE':
+            return { ...state, loading: false, error: action.error };
+        default:
+            return state;
+    }
+}
+
+export function EmailProvider({ children }: { children: React.ReactNode }) {
+    const [emailApiState, dispatchEmailApi] = useReducer(emailApiReducer, {
+        data: [],
+        loading: false,
+        error: '',
+    });
+
+    const [emailBodyApiState, dispatchEmailBodyApi] = useReducer(
+        emailBodyApiReducer,
+        {
+            data: '',
+            loading: false,
+            error: '',
+        }
+    );
+
     const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [activeFilter, setActiveFilter] = useState<FilterType>('All');
-    const [emailBodyLoading, setEmailBodyLoading] = useState<boolean>(false);
-    const [emailBodyError, setEmailBodyError] = useState<string | null>(null);
     const [readEmails, setReadEmails] = useLocalStorage<string[]>(
         'read-emails',
         []
@@ -70,71 +128,63 @@ export function EmailProvider({
         []
     );
 
-    useEffect(() => {
-        fetchEmails(currentPage);
-    }, [currentPage]);
-
-    useEffect(() => {
-        setSelectedEmailId(null);
-    }, [currentPage, activeFilter]);
-
-    const handleFetchError = (error: unknown): string => {
-        return (error as Error).message || 'An unexpected error occurred.';
-    };
-
-    async function fetchEmails(page: number) {
-        setLoading(true);
-        setError(null);
-
+    const fetchEmails = useCallback(async (page: number) => {
+        dispatchEmailApi({ type: 'FETCH_INIT' });
         try {
             const response = await fetch(`${API_BASE_URL}/?page=${page}`);
             if (!response.ok) throw new Error('Failed to fetch emails');
-
             const data = await response.json();
-            setEmails(data?.list ?? []);
+            dispatchEmailApi({
+                type: 'FETCH_SUCCESS',
+                payload: data?.list ?? [],
+            });
         } catch (err: unknown) {
-            setError(handleFetchError(err));
-        } finally {
-            setLoading(false);
+            dispatchEmailApi({
+                type: 'FETCH_FAILURE',
+                error:
+                    (err as Error).message || 'An unexpected error occurred.',
+            });
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        fetchEmails(currentPage);
+        setSelectedEmailId(null);
+    }, [currentPage, fetchEmails]);
 
     async function fetchEmailBody(emailId: string) {
-        setEmailBodyLoading(true);
-        setEmailBodyError(null);
-
+        dispatchEmailBodyApi({ type: 'FETCH_INIT' });
         try {
             const response = await fetch(`${API_BASE_URL}/?id=${emailId}`);
             if (!response.ok) throw new Error('Failed to fetch email body');
-
             const data = await response.json();
-
-            setEmails((prev) =>
-                prev.map((email) =>
+            dispatchEmailBodyApi({ type: 'FETCH_SUCCESS', payload: data.body });
+            dispatchEmailApi({
+                type: 'FETCH_SUCCESS',
+                payload: emailApiState.data.map((email) =>
                     email.id === emailId
-                        ? { ...email, body: data?.body }
+                        ? { ...email, body: data?.body ?? '' }
                         : email
-                )
-            );
+                ),
+            });
         } catch (err: unknown) {
-            setEmailBodyError(handleFetchError(err));
-        } finally {
-            setEmailBodyLoading(false);
+            dispatchEmailBodyApi({
+                type: 'FETCH_FAILURE',
+                error:
+                    (err as Error).message || 'An unexpected error occurred.',
+            });
         }
     }
 
     async function handleEmailSelect(emailId: string) {
-        const email = emails.find((e) => e.id === emailId);
-
+        const email = emailApiState.data.find((e) => e.id === emailId);
         if (email && !email.body) {
             await fetchEmailBody(emailId);
         }
-
         if (!readEmails.includes(emailId)) {
             setReadEmails((prevReadEmails) => [...prevReadEmails, emailId]);
         }
-
-        setSelectedEmailId(email?.id ?? null);
+        setSelectedEmailId(emailId);
     }
 
     function handleMarkFavorite(emailId: string) {
@@ -146,7 +196,7 @@ export function EmailProvider({
     }
 
     const filteredEmails = useMemo(() => {
-        return emails.filter((email) => {
+        return emailApiState.data.filter((email) => {
             switch (activeFilter) {
                 case 'Read':
                     return readEmails.includes(email.id);
@@ -158,17 +208,15 @@ export function EmailProvider({
                     return true;
             }
         });
-    }, [emails, readEmails, favoriteEmails, activeFilter]);
+    }, [emailApiState.data, readEmails, favoriteEmails, activeFilter]);
 
     const value = {
-        emails: filteredEmails,
+        emailApiState,
+        emailBodyApiState,
+        filteredEmails,
         selectedEmailId,
         readEmails,
         favoriteEmails,
-        loading,
-        error,
-        emailBodyLoading,
-        emailBodyError,
         currentPage,
         activeFilter,
         actions: {

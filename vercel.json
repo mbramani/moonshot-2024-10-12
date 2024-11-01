@@ -3,14 +3,17 @@
         {
             "source": "/api/(.*)",
             "headers": [
-                { "key": "Access-Control-Allow-Origin", "value": "*" },
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "https://mbramani.github.io, https://moonshot-2024-10-12.vercel.app"
+                },
                 {
                     "key": "Access-Control-Allow-Methods",
                     "value": "GET, POST, OPTIONS"
                 },
                 {
                     "key": "Access-Control-Allow-Headers",
-                    "value": "Content-Type, Authorization"
+                    "value": "Content-Type, Accept, Authorization"
                 }
             ]
         }

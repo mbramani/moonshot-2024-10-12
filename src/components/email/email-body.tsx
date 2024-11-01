@@ -6,17 +6,18 @@ import { useMemo } from 'react';
 
 export function EmailBody() {
     const {
-        emails,
+        emailApiState,
+        emailBodyApiState,
         selectedEmailId,
-        emailBodyLoading,
-        emailBodyError,
         favoriteEmails,
         actions,
     } = useEmail();
 
     const selectedEmail = useMemo(
-        () => emails.find((email) => email.id === selectedEmailId) ?? null,
-        [selectedEmailId, emails]
+        () =>
+            emailApiState.data.find((email) => email.id === selectedEmailId) ??
+            null,
+        [selectedEmailId, emailApiState.data]
     );
 
     const senderInitial = useMemo(
@@ -35,7 +36,7 @@ export function EmailBody() {
         );
     }
 
-    if (emailBodyLoading) {
+    if (emailBodyApiState.loading) {
         return (
             <StatusMessage
                 message="Loading..."
@@ -46,10 +47,10 @@ export function EmailBody() {
         );
     }
 
-    if (emailBodyError) {
+    if (emailBodyApiState.error) {
         return (
             <StatusMessage
-                message={`Error: ${emailBodyError}`}
+                message={`Error: ${emailBodyApiState.error}`}
                 className="col-span-3 lg:col-span-4"
             />
         );

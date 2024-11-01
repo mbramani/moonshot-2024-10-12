@@ -2,9 +2,7 @@ import { classNames } from '@/utils/class-names';
 import { useEmail } from '@/contexts/email-context';
 
 export function EmailPagination() {
-    const { activeFilter, currentPage, actions } = useEmail();
-
-    if (activeFilter !== 'All') return null;
+    const { currentPage, actions } = useEmail();
 
     const pages = Array.from({ length: 2 }, (_, i) => i + 1);
 

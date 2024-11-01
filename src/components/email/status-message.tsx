@@ -13,7 +13,7 @@ export function StatusMessage({
         <section
             className={classNames(
                 className,
-                'flex justify-center items-center m-2 bg-white border border-border-muted rounded-lg min-h-[76vh] max-h-min '
+                'flex justify-center items-center m-2 bg-white border border-border-muted rounded-lg min-h-[34vh] md:min-h-[76vh]  max-h-full '
             )}
         >
             <h2 className="ml-2 text-text-default text-lg font-semibold flex gap-2">

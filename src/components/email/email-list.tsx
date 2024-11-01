@@ -2,48 +2,44 @@ import Spinner from './spinner';
 import { StatusMessage } from './status-message';
 import { classNames } from '@/utils/class-names';
 import { formatTimestamp } from '@/utils/format-timestamp';
-import { useCallback } from 'react';
 import { useEmail } from '@/contexts/email-context';
 
 export function EmailList() {
     const {
-        emails,
-        loading,
-        error,
+        emailApiState,
+        filteredEmails,
         readEmails,
         favoriteEmails,
         selectedEmailId,
         actions,
     } = useEmail();
 
-    const getInitial = useCallback(
-        (name: string) => name.charAt(0).toUpperCase(),
-        []
-    );
-    const truncateText = useCallback(
-        (text: string, limit: number) =>
-            text.length > limit ? `${text.slice(0, limit)} ...` : text,
-        []
-    );
+    function getInitial(name: string) {
+        return name.charAt(0).toUpperCase();
+    }
+
+    function truncateText(text: string, limit: number) {
+        return text.length > limit ? `${text.slice(0, limit)}...` : text;
+    }
 
     const statusMessageClass = classNames(
-        selectedEmailId ? 'col-span-2 lg:col-span-2' : 'col-span-6'
+        selectedEmailId ? 'col-span-2 lg:col-span-2' : 'col-span-6 '
     );
 
-    if (loading)
+    if (emailApiState.loading)
         return (
             <StatusMessage message="Loading..." className={statusMessageClass}>
                 <Spinner />
             </StatusMessage>
         );
-    if (error)
+    if (emailApiState.error)
         return (
             <StatusMessage
-                message={`Error: ${error}`}
+                message={`Error: ${emailApiState.error}`}
                 className={statusMessageClass}
             />
         );
-    if (emails.length === 0)
+    if (filteredEmails.length === 0)
         return (
             <StatusMessage
                 message="No emails found."
@@ -54,14 +50,14 @@ export function EmailList() {
     return (
         <section
             className={classNames(
-                'flex flex-col gap-y-4 p-2 w-full',
+                'flex flex-col gap-y-4 p-2 w-full ',
                 statusMessageClass
             )}
             aria-label="Email List"
             role="region"
         >
             <ul role="list" className="space-y-4">
-                {emails.map(
+                {filteredEmails.map(
                     ({ id, from, subject, short_description, date }) => (
                         <li
                             key={id}
