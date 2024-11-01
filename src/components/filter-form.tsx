@@ -22,6 +22,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { DateRange } from 'react-day-picker';
 import { DateRangePicker } from './date-range-picker';
+import { FilterSelectSkeleton } from './skeletons/filter-form-skeleton';
 import { Label } from './ui/label';
 import { ResetIcon } from '@radix-ui/react-icons';
 import { Skeleton } from './ui/skeleton';
@@ -268,15 +269,6 @@ export function FilterForm({
                 </CardContent>
             </Card>
         </form>
-    );
-}
-
-function FilterSelectSkeleton({ label }: { label: string }) {
-    return (
-        <div className="space-y-2">
-            <label className="text-sm font-medium">{label}</label>
-            <Skeleton className="h-10 w-full" />
-        </div>
     );
 }
 

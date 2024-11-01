@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter, useSearchParams } from 'next/navigation';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +12,6 @@ import { toast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
 import { useFetch } from '@/hooks/use-fetch';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { useRouter } from 'next/navigation';
 
 interface AuthFormState {
     email: string;
@@ -27,6 +28,9 @@ type AuthResponse<T extends 'login' | 'register'> = T extends 'login'
 
 export function AuthForm({ type }: AuthFormProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get('redirect') || '/dashboard';
+
     const [_authToken, setAuthToken] = useLocalStorage<string>(
         'auth-token',
         ''
@@ -38,15 +42,20 @@ export function AuthForm({ type }: AuthFormProps) {
 
     useEffect(() => {
         if (data) {
-            if (type === 'login' && 'token' in data) {
-                setAuthToken(data.token);
-            }
+            const successMessage = `${type === 'login' ? 'Logged in' : 'Registered'} successfully`;
             toast({
-                title: `${type === 'login' ? 'Logged in' : 'Registered'} successfully`,
+                title: successMessage,
                 description: message,
             });
 
-            router.push(type === 'login' ? '/dashboard' : '/login');
+            if (type === 'login' && 'token' in data) {
+                setAuthToken(data.token);
+                router.push(redirectUrl);
+            } else if (type === 'register') {
+                router.push(
+                    `/login?redirect=${encodeURIComponent(redirectUrl)}`
+                );
+            }
         } else if (error) {
             toast({
                 title: `Error during ${type}`,
@@ -54,7 +63,7 @@ export function AuthForm({ type }: AuthFormProps) {
                 variant: 'destructive',
             });
         }
-    }, [data, error, message, router, setAuthToken, type]);
+    }, [data, error, message, router, setAuthToken, type, redirectUrl]);
 
     function handleAuthFormSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();

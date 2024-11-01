@@ -21,6 +21,10 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from '@/components/ui/chart';
+import {
+    FeatureBarChartSkeleton,
+    FeatureLineChartSkeleton,
+} from './skeletons/feature-charts-skeleton';
 import { useMemo, useState } from 'react';
 
 import { BarChart3 } from 'lucide-react';
@@ -142,7 +146,7 @@ export function FeatureCharts({ loading = false, data }: FeatureChartsProps) {
                 </CardHeader>
                 <CardContent>
                     {loading ? (
-                        <SkeletonLoader type="bar" />
+                        <FeatureBarChartSkeleton />
                     ) : !hasData || !hasBarData ? (
                         <EmptyState message="No feature usage data available. Check back later for insights." />
                     ) : (
@@ -166,7 +170,7 @@ export function FeatureCharts({ loading = false, data }: FeatureChartsProps) {
                 </CardHeader>
                 <CardContent>
                     {loading ? (
-                        <SkeletonLoader type="line" />
+                        <FeatureLineChartSkeleton />
                     ) : !hasData || !hasLineData ? (
                         <EmptyState
                             message={`No usage data available for Feature ${selectedFeature ?? ''}. Try selecting a different feature.`}
@@ -309,51 +313,6 @@ function FeatureLineChart({
                     />
                 </LineChart>
             </ChartContainer>
-        </div>
-    );
-}
-
-function SkeletonLoader({ type }: { type: 'bar' | 'line' }) {
-    return (
-        <div className="space-y-4 w-full h-96">
-            {type === 'bar' ? (
-                <>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <div
-                            key={`chart-skeleton-row-${i}`}
-                            className="flex items-center justify-between"
-                        >
-                            <Skeleton className="h-4 w-12" />
-                            <div className="flex-1 mx-4">
-                                <Skeleton className="h-12 w-full" />
-                            </div>
-                        </div>
-                    ))}
-                    <div className="flex justify-between pr-4 pl-16">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                            <Skeleton
-                                key={`chart-skeleton-col-${i}`}
-                                className="h-4 w-8"
-                            />
-                        ))}
-                    </div>
-                </>
-            ) : (
-                <div className="relative w-[90%] h-80 ml-3 md:ml-6">
-                    <Skeleton className="absolute bottom-0 left-0 w-full h-1" />
-                    <Skeleton className="absolute top-0 left-0 h-full w-1" />
-                    {Array.from({ length: 10 }).map((_, i) => (
-                        <Skeleton
-                            key={`line-skeleton-${i}`}
-                            className="absolute h-2 w-2 rounded-full"
-                            style={{
-                                left: `${(i / 9) * 100}%`,
-                                top: `${Math.random() * 80 + 10}%`,
-                            }}
-                        />
-                    ))}
-                </div>
-            )}
         </div>
     );
 }
