@@ -1,3 +1,5 @@
+import "server-only"
+
 import { createSwaggerSpec } from 'next-swagger-doc';
 
 export const getApiDocs = async () => {
@@ -13,7 +15,7 @@ export const getApiDocs = async () => {
             },
             servers: [
                 {
-                    url: 'https://moonshot-2024-10-12.vercel.app/api',
+                    url: 'https://moonshot-2024-10-12.vercel.app',
                     description: 'Api base URL',
                 },
             ],

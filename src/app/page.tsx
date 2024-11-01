@@ -33,6 +33,15 @@ export default function Home() {
                                 Data Visualization Dashboard Solution
                             </Link>
                         </li>
+                        <li>
+                            <Link
+                                href="/api-docs"
+                                title="API Documentation"
+                                className="inline-block px-4 py-2 bg-green-200 hover:bg-green-100 rounded-md"
+                            >
+                                Swagger API Documentation
+                            </Link>
+                        </li>
                     </ul>
                 </nav>
             </section>
