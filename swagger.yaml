@@ -1,0 +1,483 @@
+openapi: 3.0.0
+info:
+  title: Moonshot 2024-10-12 Q2 API Documentation
+  version: '1.0.0'
+  description: API documentation for authentication and analytics endpoints
+
+servers:
+  - url: https://moonshot-2024-10-12.vercel.app/api
+    description: API base URL
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+        errorCode:
+          type: string
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+    
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+        message:
+          type: string
+    
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          description: Must be at least 8 characters with one uppercase, lowercase, number, and special character
+    
+    RegisterResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            user:
+              type: object
+              properties:
+                id:
+                  type: string
+                email:
+                  type: string
+                createdAt:
+                  type: string
+                  format: date-time
+    
+    UserResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: object
+          properties:
+            user:
+              type: object
+              properties:
+                id:
+                  type: string
+                email:
+                  type: string
+                createdAt:
+                  type: string
+                  format: date-time
+        message:
+          type: string
+    
+    AnalyticsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+                format: date
+              ageGroup:
+                type: string
+                enum: [AGE_15_25, OVER_25]
+              gender:
+                type: string
+                enum: [MALE, FEMALE]
+              featureA:
+                type: integer
+              featureB:
+                type: integer
+              featureC:
+                type: integer
+              featureD:
+                type: integer
+              featureE:
+                type: integer
+              featureF:
+                type: integer
+        message:
+          type: string
+        meta:
+          type: object
+          properties:
+            totalItems:
+              type: integer
+            itemsPerPage:
+              type: integer
+
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate a user and receive a JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                validationError:
+                  summary: Validation Error
+                  value:
+                    status: error
+                    errorCode: VALIDATION_ERROR
+                    message: 'Email and password are required'
+                    errors:
+                      email: 'Email is required'
+                      password: 'Password is required'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidCredentials:
+                  summary: Invalid Credentials
+                  value:
+                    status: error
+                    errorCode: INVALID_CREDENTIALS
+                    message: 'Invalid credentials. Please check your email and password.'
+                    errors:
+                      email: 'No account found with this email address'
+                      password: 'The password you entered is incorrect'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalServerError:
+                  summary: Internal Server Error
+                  value:
+                    status: error
+                    errorCode: INTERNAL_SERVER_ERROR
+                    message: 'An unexpected error occurred. Please try again later.'
+
+  /auth/register:
+    post:
+      summary: User registration
+      description: Register a new user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Validation error or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                validationError:
+                  summary: Validation Error
+                  value:
+                    status: error
+                    errorCode: VALIDATION_ERROR
+                    message: 'Email and password required'
+                    errors:
+                      email: 'Email is required'
+                      password: 'Password is required'
+                invalidEmailFormat:
+                  summary: Invalid Email Format
+                  value:
+                    status: error
+                    errorCode: INVALID_EMAIL_FORMAT
+                    message: 'The provided email format is incorrect'
+                    errors:
+                      email: 'Please provide a valid email address'
+                weakPassword:
+                  summary: Weak Password
+                  value:
+                    status: error
+                    errorCode: WEAK_PASSWORD
+                    message: 'Password does not meet security criteria'
+                    errors:
+                      password: 'Password should be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character'
+                userExists:
+                  summary: User Already Exists
+                  value:
+                    status: error
+                    errorCode: USER_ALREADY_EXISTS
+                    message: 'A user with this email already exists'
+                    errors:
+                      email: 'Email is already in use'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalServerError:
+                  summary: Internal Server Error
+                  value:
+                    status: error
+                    errorCode: INTERNAL_SERVER_ERROR
+                    message: 'An unexpected error occurred. Please try again later.'
+
+  /auth/user:
+    get:
+      summary: Get user information
+      description: Retrieve the current user's information
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                authHeaderMissing:
+                  summary: Authorization Header Missing
+                  value:
+                    status: error
+                    errorCode: AUTH_HEADER_MISSING
+                    message: 'Authorization header is missing'
+                tokenMissing:
+                  summary: Token Missing
+                  value:
+                    status: error
+                    errorCode: TOKEN_MISSING
+                    message: 'Token is missing from authorization header'
+                invalidToken:
+                  summary: Invalid Token
+                  value:
+                    status: error
+                    errorCode: INVALID_TOKEN
+                    message: 'Token is invalid or expired'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                userNotFound:
+                  summary: User Not Found
+                  value:
+                    status: error
+                    errorCode: USER_NOT_FOUND
+                    message: 'User not found'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalServerError:
+                  summary: Internal Server Error
+                  value:
+                    status: error
+                    errorCode: INTERNAL_SERVER_ERROR
+                    message: 'An unexpected error occurred. Please try again later.'
+
+  /analytics:
+    get:
+      summary: Get analytics data
+      description: Retrieve analytics data with optional filtering
+      tags:
+        - Analytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: date_from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: 2023-01-01
+        - name: date_to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: 2023-01-31
+        - name: age_group
+          in: query
+          schema:
+            type: string
+            enum: [AGE_15_25, OVER_25]
+        - name: gender
+          in: query
+          schema:
+            type: string
+            enum: [MALE, FEMALE]
+      responses:
+        '200':
+          description: Analytics data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                validationError:
+                  summary: Validation Error
+                  value:
+                    status: error
+                    errorCode: VALIDATION_ERROR
+                    message: 'Bad Request: start date and end date are required'
+                    errors:
+                      date_from: 'Date from is required'
+                      date_to: 'Date to is required'
+                invalidDateFormat:
+                  summary: Invalid Date Format
+                  value:
+                    status: error
+                    errorCode: VALIDATION_ERROR
+                    message: 'Bad Request: Invalid date format'
+                    errors:
+                      date_from: 'Invalid date format'
+                      date_to: 'Invalid date format'
+                invalidAgeGroup:
+                  summary: Invalid Age Group
+                  value:
+                    status: error
+                    errorCode: VALIDATION_ERROR
+                    message: 'Bad Request: Invalid age group'
+                    errors:
+                      age_group: 'Invalid age group provided, must be one of AGE_15_25 or OVER_25'
+                invalidGender:
+                  summary: Invalid Gender
+                  value:
+                    status: error
+                    errorCode: VALIDATION_ERROR
+                    message: 'Bad Request: Invalid gender'
+                    errors:
+                      gender: 'Invalid gender provided, must be one of MALE or FEMALE'
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                authHeaderMissing:
+                  summary: Authorization Header Missing
+                  value:
+                    status: error
+                    errorCode: AUTH_HEADER_MISSING
+                    message: 'Authorization header is missing'
+                tokenMissing:
+                  summary: Token Missing
+                  value:
+                    status: error
+                    errorCode: TOKEN_MISSING
+                    message: 'Token is missing from authorization header'
+                invalidToken:
+                  summary: Invalid Token
+                  value:
+                    status: error
+                    errorCode: INVALID_TOKEN
+                    message: 'Token is invalid or expired'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                internalServerError:
+                  summary: Internal Server Error
+                  value:
+                    status: error
+                    errorCode: INTERNAL_SERVER_ERROR
+                    message: 'An unexpected error occurred. Please try again later.'
