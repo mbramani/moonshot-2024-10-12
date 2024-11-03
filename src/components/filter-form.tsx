@@ -17,6 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { sanitizeAgeGroupEnum, sanitizeGenderEnum } from '@/utils/sanitize';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -80,7 +81,7 @@ export function FilterForm({
 
     const [preferencesCookie, setPreferencesCookie] = useCookies<QueryParams>(
         COOKIE_NAME,
-        getDefaultCookieValues()
+        getQueryParams(defaultFilterFormState)
     );
     const [filterFormState, setFilterFormState] = useState<FilterFormState>(
         getInitialFilterState
@@ -110,67 +111,42 @@ export function FilterForm({
 
     function getInitialFilterState(): FilterFormState {
         const ageGroup =
-            (searchParams.get('age_group') as AgeGroup) ||
-            preferencesCookie.age_group ||
+            sanitizeAgeGroupEnum(searchParams.get('age_group')) ||
+            sanitizeAgeGroupEnum(preferencesCookie.age_group) ||
             defaultFilterFormState.ageGroup;
+
         const gender =
-            (searchParams.get('gender') as Gender) ||
-            preferencesCookie.gender ||
+            sanitizeGenderEnum(searchParams.get('gender')) ||
+            sanitizeGenderEnum(preferencesCookie.gender) ||
             defaultFilterFormState.gender;
+
         const dateRange = {
             from:
-                parseISODate(
-                    searchParams.get('date_from') ??
-                        preferencesCookie.date_from ??
-                        ''
-                ) || defaultFilterFormState.dateRange?.from,
+                parseISODate(searchParams.get('date_from')) ||
+                parseISODate(preferencesCookie.date_from) ||
+                defaultFilterFormState.dateRange?.from,
             to:
-                parseISODate(
-                    searchParams.get('date_to') ??
-                        preferencesCookie.date_to ??
-                        ''
-                ) || defaultFilterFormState.dateRange?.to,
+                parseISODate(searchParams.get('date_to')) ||
+                parseISODate(preferencesCookie.date_to) ||
+                defaultFilterFormState.dateRange?.to,
         };
-
-        return { ageGroup, gender, dateRange };
-    }
-
-    function getDefaultCookieValues() {
+        console.log(ageGroup);
         return {
-            age_group:
-                (searchParams.get('age_group') as AgeGroup) ||
-                defaultFilterFormState.ageGroup,
-            gender:
-                (searchParams.get('gender') as Gender) ||
-                defaultFilterFormState.gender,
-            date_from:
-                searchParams.get('date_from') ||
-                defaultFilterFormState.dateRange?.from?.toLocaleDateString(
-                    'en-CA'
-                ),
-            date_to:
-                searchParams.get('date_to') ||
-                defaultFilterFormState.dateRange?.to?.toLocaleDateString(
-                    'en-CA'
-                ),
+            ageGroup: ageGroup,
+            gender: gender,
+            dateRange,
         };
     }
 
-    function getQueryParams(): QueryParams {
+    function getQueryParams(formState: FilterFormState): QueryParams {
         return {
             age_group:
-                filterFormState.ageGroup !== 'ALL'
-                    ? filterFormState.ageGroup
-                    : undefined,
-            gender:
-                filterFormState.gender !== 'ALL'
-                    ? filterFormState.gender
-                    : undefined,
-            date_from:
-                filterFormState.dateRange?.from?.toLocaleDateString('en-CA'),
+                formState.ageGroup !== 'ALL' ? formState.ageGroup : undefined,
+            gender: formState.gender !== 'ALL' ? formState.gender : undefined,
+            date_from: formState.dateRange?.from?.toLocaleDateString('en-CA'),
             date_to:
-                filterFormState.dateRange?.to?.toLocaleDateString('en-CA') ||
-                filterFormState.dateRange?.from?.toLocaleDateString('en-CA'),
+                formState.dateRange?.to?.toLocaleDateString('en-CA') ||
+                formState.dateRange?.from?.toLocaleDateString('en-CA'),
         };
     }
 
@@ -190,7 +166,7 @@ export function FilterForm({
     }
 
     function handleApplyFilters() {
-        const queryParams = getQueryParams();
+        const queryParams = getQueryParams(filterFormState);
 
         updateURL(queryParams);
 
@@ -207,10 +183,11 @@ export function FilterForm({
 
     function handleResetFilters() {
         setFilterFormState(defaultFilterFormState);
+        const queryParams = getQueryParams(defaultFilterFormState);
 
-        updateURL({});
+        updateURL(queryParams);
 
-        setPreferencesCookie(COOKIE_NAME, {}, 7, {
+        setPreferencesCookie(COOKIE_NAME, queryParams, 7, {
             path: '/',
             sameSite: 'Strict',
         });
